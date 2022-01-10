@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import scipy.stats
+import argparse
 
 
 def test_column_names(data):
@@ -59,7 +60,69 @@ def test_similar_neigh_distrib(data: pd.DataFrame, ref_data: pd.DataFrame, kl_th
 
     assert scipy.stats.entropy(dist1, dist2, base=2) < kl_threshold
 
+def test_row_count(data: pd.DataFrame):
+    """
+    Test of proper data rows range
+    """
+    assert 15000 < data.shape[0] < 1000000
 
-########################################################
-# Implement here test_row_count and test_price_range   #
-########################################################
+def test_price_range(data: pd.DataFrame, min_price, max_price):
+    """Test of proper boundaries of price values"""
+    assert data['price'].between(min_price, max_price).all()
+
+def go(args):
+    '''go func of whole step'''
+    df = pd.read_csv(args.input_artifact)
+    ref_df = pd.read_csv(args.ref_artifact)
+    test_column_names(df)
+    test_neighborhood_names(df)
+    test_proper_boundaries(df)
+    test_similar_neigh_distrib(df, ref_df, args.kl_threshold)
+    test_row_count(df)
+    test_price_range(df, args.min_price, args.max_price)
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="The data verification tests")
+
+
+    parser.add_argument(
+        "--csv", 
+        type=str,
+        help="input artifact for data check step",
+        required=True
+    )
+
+    parser.add_argument(
+        "--ref", 
+        type=str,
+        help="refernece artifact for data check step",
+        required=True
+    )
+
+    parser.add_argument(
+        "--min_price", 
+        type=float,
+        help="the minimum price to consider",
+        required=True
+    )
+
+    parser.add_argument(
+        "--max_price", 
+        type=float,
+        help="the maximum price to consider",
+        required=True
+    )
+
+    parser.add_argument(
+        "--kl_threshold", 
+        type=float,
+        help="the maximum price to consider",
+        required=True
+    )
+
+
+    args = parser.parse_args()
+
+    go(args)
